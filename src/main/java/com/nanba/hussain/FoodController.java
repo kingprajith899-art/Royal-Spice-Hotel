@@ -35,6 +35,11 @@ public class FoodController {
         return "Contact";
     }
 
+    @GetMapping("/admin")
+    public String admin() {
+        return "Admin";
+    }
+
     @PostMapping("/contact")
     public String contactSubmit() {
         return "Contact";

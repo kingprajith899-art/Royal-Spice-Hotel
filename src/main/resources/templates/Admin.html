@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<header>
+    <a th:href="@{/}"><i class="fas fa-home"></i> Home</a>
+    <a th:href="@{/order}"><i class="fas fa-utensils"></i> Order</a>
+    <a th:href="@{/orders}"><i class="fas fa-clock-rotate-left"></i> Past Orders</a>
+    <a th:href="@{/contact}"><i class="fas fa-phone-alt"></i> Contact</a>
+    <a class="active" th:href="@{/admin}"><i class="fas fa-user-shield"></i> Admin</a>
+</header>
+
+<div class="container">
+    <h2><i class="fas fa-shield-halved"></i> Admin Dashboard</h2>
+
+    <div id="loginBox" class="contact-card admin-login-box">
+        <h3>Admin Login</h3>
+        <div class="input-group">
+            <label for="username">Username</label>
+            <input id="username" type="text" value="admin">
+        </div>
+        <div class="input-group">
+            <label for="password">Password</label>
+            <input id="password" type="password" value="admin123">
+        </div>
+        <button id="loginBtn" class="btn">Login</button>
+        <p class="notice" id="loginMsg">Login required to manage dishes and prices.</p>
+    </div>
+
+    <div id="adminPanel" class="admin-grid" style="display:none;">
+        <div class="contact-card">
+            <h3 id="formTitle">Add New Dish</h3>
+            <input type="hidden" id="dishId">
+
+            <div class="input-group">
+                <label for="dishCategory">Category</label>
+                <input id="dishCategory" type="text" placeholder="🥬 Veg">
+            </div>
+            <div class="input-group">
+                <label for="dishName">Dish Name</label>
+                <input id="dishName" type="text" placeholder="🍕 Paneer Pizza">
+            </div>
+            <div class="input-group">
+                <label for="dishPrice">Price</label>
+                <input id="dishPrice" type="number" min="1" placeholder="120">
+            </div>
+            <div class="input-group">
+                <label><input id="dishActive" type="checkbox" checked> Active</label>
+            </div>
+
+            <div class="admin-actions">
+                <button id="saveBtn" class="btn">Save Dish</button>
+                <button id="cancelBtn" class="btn secondary-btn" style="display:none;">Cancel Edit</button>
+                <button id="logoutBtn" class="btn secondary-btn">Logout</button>
+            </div>
+            <p class="notice" id="adminMsg">Use this panel to add, update, and disable dishes.</p>
+        </div>
+
+        <div class="contact-card">
+            <h3>All Dishes</h3>
+            <div class="table-wrap">
+                <table class="orders-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Category</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="dishRows"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const api = {
+        login: "/api/admin/login",
+        me: "/api/admin/me",
+        logout: "/api/admin/logout",
+        dishes: "/api/admin/dishes"
+    };
+
+    let token = localStorage.getItem("adminToken") || "";
+
+    const loginBox = document.getElementById("loginBox");
+    const adminPanel = document.getElementById("adminPanel");
+    const loginMsg = document.getElementById("loginMsg");
+    const adminMsg = document.getElementById("adminMsg");
+    const dishRows = document.getElementById("dishRows");
+    const formTitle = document.getElementById("formTitle");
+    const dishId = document.getElementById("dishId");
+    const dishCategory = document.getElementById("dishCategory");
+    const dishName = document.getElementById("dishName");
+    const dishPrice = document.getElementById("dishPrice");
+    const dishActive = document.getElementById("dishActive");
+    const cancelBtn = document.getElementById("cancelBtn");
+
+    async function request(url, options = {}) {
+        const headers = options.headers || {};
+        if (token) headers["X-Admin-Token"] = token;
+        const response = await fetch(url, { ...options, headers });
+        if (!response.ok) throw new Error(await response.text());
+        if (response.status === 204) return null;
+        return response.json();
+    }
+
+    function showAdmin() {
+        loginBox.style.display = "none";
+        adminPanel.style.display = "grid";
+    }
+
+    function showLogin() {
+        loginBox.style.display = "block";
+        adminPanel.style.display = "none";
+    }
+
+    function resetForm() {
+        dishId.value = "";
+        dishCategory.value = "";
+        dishName.value = "";
+        dishPrice.value = "";
+        dishActive.checked = true;
+        formTitle.textContent = "Add New Dish";
+        cancelBtn.style.display = "none";
+    }
+
+    function startEdit(dish) {
+        dishId.value = dish.id;
+        dishCategory.value = dish.category;
+        dishName.value = dish.name;
+        dishPrice.value = dish.price;
+        dishActive.checked = !!dish.active;
+        formTitle.textContent = "Edit Dish #" + dish.id;
+        cancelBtn.style.display = "inline-flex";
+    }
+
+    async function loadDishes() {
+        const dishes = await request(api.dishes);
+        dishRows.innerHTML = "";
+        dishes.forEach(d => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${d.id}</td>
+                <td>${d.category}</td>
+                <td>${d.name}</td>
+                <td>${d.price}</td>
+                <td><span class="status-pill">${d.active ? "Active" : "Disabled"}</span></td>
+                <td>
+                    <button class="invoice-btn edit-btn">Edit</button>
+                    <button class="invoice-btn disable-btn">Disable</button>
+                </td>
+            `;
+            tr.querySelector(".edit-btn").addEventListener("click", () => startEdit(d));
+            tr.querySelector(".disable-btn").addEventListener("click", () => disableDish(d.id));
+            dishRows.appendChild(tr);
+        });
+    }
+
+    async function login() {
+        try {
+            const data = await request(api.login, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: document.getElementById("username").value,
+                    password: document.getElementById("password").value
+                })
+            });
+            token = data.token;
+            localStorage.setItem("adminToken", token);
+            showAdmin();
+            await loadDishes();
+            loginMsg.textContent = "Login success.";
+        } catch (e) {
+            loginMsg.textContent = "Invalid admin credentials.";
+        }
+    }
+
+    async function logout() {
+        try {
+            await request(api.logout, { method: "POST" });
+        } catch (e) {}
+        token = "";
+        localStorage.removeItem("adminToken");
+        resetForm();
+        showLogin();
+    }
+
+    async function saveDish() {
+        const payload = {
+            category: dishCategory.value.trim(),
+            name: dishName.value.trim(),
+            price: Number(dishPrice.value),
+            active: dishActive.checked
+        };
+
+        if (!payload.category || !payload.name || payload.price <= 0) {
+            adminMsg.textContent = "Enter valid dish data.";
+            return;
+        }
+
+        try {
+            if (dishId.value) {
+                await request(`${api.dishes}/${dishId.value}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                adminMsg.textContent = "Dish updated.";
+            } else {
+                await request(api.dishes, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                adminMsg.textContent = "Dish added.";
+            }
+            resetForm();
+            await loadDishes();
+        } catch (e) {
+            adminMsg.textContent = "Save failed.";
+        }
+    }
+
+    async function disableDish(id) {
+        try {
+            await request(`${api.dishes}/${id}`, { method: "DELETE" });
+            adminMsg.textContent = "Dish disabled.";
+            await loadDishes();
+        } catch (e) {
+            adminMsg.textContent = "Disable failed.";
+        }
+    }
+
+    async function boot() {
+        document.getElementById("loginBtn").addEventListener("click", login);
+        document.getElementById("logoutBtn").addEventListener("click", logout);
+        document.getElementById("saveBtn").addEventListener("click", saveDish);
+        cancelBtn.addEventListener("click", resetForm);
+
+        if (!token) {
+            showLogin();
+            return;
+        }
+
+        try {
+            await request(api.me);
+            showAdmin();
+            await loadDishes();
+        } catch (e) {
+            token = "";
+            localStorage.removeItem("adminToken");
+            showLogin();
+        }
+    }
+
+    boot();
+</script>
+
+</body>
+</html>

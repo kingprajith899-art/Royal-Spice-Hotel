@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
+<a class="btn admin-tab" th:href="@{/admin}"><i class="fas fa-user-shield"></i> Admin</a>
 
 <header>
     <a th:href="@{/}"><i class="fas fa-home"></i> Home</a>
@@ -23,11 +24,7 @@
         <div>
             <div class="input-group">
                 <label for="category">Category</label>
-                <select id="category" onchange="updateMenu()">
-                    <option value="veg">🥬 Veg</option>
-                    <option value="nonveg">🍗 Non-Veg</option>
-                    <option value="juice">🍹 Juices and Drinks</option>
-                </select>
+                <select id="category" onchange="updateMenu()"></select>
             </div>
 
             <div class="input-group">
@@ -68,38 +65,19 @@
 </div>
 
 <script>
-    const menu = {
-        veg: [
-            { name: "🥞 Dosa", price: 30 },
-            { name: "🍚 Idly", price: 25 },
-            { name: "🍛 Meals", price: 80 },
-            { name: "🥣 Rasam", price: 35 }
-        ],
-        nonveg: [
-            { name: "🍗 Chicken Biryani", price: 150 },
-            { name: "🥩 Mutton Biryani", price: 220 },
-            { name: "🥚 Egg Parotta", price: 90 }
-        ],
-        juice: [
-            { name: "🍊 Orange Juice", price: 50 },
-            { name: "🍋 Lemon Juice", price: 40 },
-            { name: "🍍 Pineapple Juice", price: 70 }
-        ]
-    };
-
+    const menu = {};
     let totalAmount = 0;
     let totalItems = 0;
     const orderLines = [];
     const orderLineTotals = [];
     const orderLineQty = [];
-    const orderLineNames = [];
 
     function updateMenu() {
         const category = document.getElementById("category").value;
         const foodSelect = document.getElementById("food");
         foodSelect.innerHTML = "";
 
-        menu[category].forEach(item => {
+        (menu[category] || []).forEach(item => {
             const option = document.createElement("option");
             option.value = item.price;
             option.textContent = `${item.name} - Rs. ${item.price}`;
@@ -107,12 +85,39 @@
         });
     }
 
+    async function loadMenu() {
+        try {
+            const response = await fetch("/api/dishes");
+            if (!response.ok) throw new Error("menu load failed");
+            const dishes = await response.json();
+
+            Object.keys(menu).forEach(key => delete menu[key]);
+            const categorySelect = document.getElementById("category");
+            categorySelect.innerHTML = "";
+
+            dishes.forEach(dish => {
+                if (!menu[dish.category]) {
+                    menu[dish.category] = [];
+                    const catOption = document.createElement("option");
+                    catOption.value = dish.category;
+                    catOption.textContent = dish.category;
+                    categorySelect.appendChild(catOption);
+                }
+                menu[dish.category].push({ name: dish.name, price: dish.price });
+            });
+
+            updateMenu();
+        } catch (e) {
+            setNotice("Unable to load menu from database.", true);
+        }
+    }
+
     function addItem() {
         const foodSelect = document.getElementById("food");
         const quantity = parseInt(document.getElementById("quantity").value, 10);
 
-        if (!quantity || quantity <= 0) {
-            setNotice("Enter a valid quantity greater than 0.", true);
+        if (!quantity || quantity <= 0 || foodSelect.options.length === 0) {
+            setNotice("Enter a valid quantity and select a dish.", true);
             return;
         }
 
@@ -123,7 +128,6 @@
         totalAmount += lineTotal;
         totalItems += quantity;
 
-        orderLineNames.push(foodName);
         orderLineTotals.push(lineTotal);
         orderLineQty.push(quantity);
         orderLines.push(`${foodName} x${quantity} (Rs. ${lineTotal})`);
@@ -145,7 +149,6 @@
 
         const lastTotal = orderLineTotals.pop();
         const lastQty = orderLineQty.pop();
-        orderLineNames.pop();
         orderLines.pop();
 
         totalAmount -= lastTotal;
@@ -163,7 +166,6 @@
         orderLines.length = 0;
         orderLineTotals.length = 0;
         orderLineQty.length = 0;
-        orderLineNames.length = 0;
         document.getElementById("orderList").innerHTML = "";
         syncHiddenFields();
         setNotice("Cart cleared.", false);
@@ -192,7 +194,7 @@
         notice.style.color = isError ? "#991b1b" : "#065f46";
     }
 
-    updateMenu();
+    loadMenu();
 </script>
 
 </body>
