@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Place Order</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<header>
+    <a th:href="@{/}"><i class="fas fa-home"></i> Home</a>
+    <a class="active" th:href="@{/order}"><i class="fas fa-utensils"></i> Order</a>
+    <a th:href="@{/orders}"><i class="fas fa-clock-rotate-left"></i> Past Orders</a>
+    <a th:href="@{/contact}"><i class="fas fa-phone-alt"></i> Contact</a>
+</header>
+
+<div class="order-card">
+    <h2><i class="fas fa-burger"></i> Build Your Order</h2>
+
+    <div class="order-layout">
+        <div>
+            <div class="input-group">
+                <label for="category">Category</label>
+                <select id="category" onchange="updateMenu()">
+                    <option value="veg">🥬 Veg</option>
+                    <option value="nonveg">🍗 Non-Veg</option>
+                    <option value="juice">🍹 Juices and Drinks</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="food">Food Item</label>
+                <select id="food"></select>
+            </div>
+
+            <div class="input-group">
+                <label for="quantity">Quantity</label>
+                <input type="number" id="quantity" min="1" value="1">
+            </div>
+
+            <button class="add-btn" onclick="addItem()"><i class="fas fa-plus-circle"></i> Add Item</button>
+        </div>
+
+        <div class="order-summary">
+            <h3><i class="fas fa-list-check"></i> Cart Summary</h3>
+            <ul id="orderList"></ul>
+            <div class="total-row">
+                <span>Total</span>
+                <span>Rs. <span id="totalAmount">0</span></span>
+            </div>
+            <div class="order-actions">
+                <button type="button" class="ghost-btn" onclick="removeLastItem()"><i class="fas fa-rotate-left"></i> Remove Last</button>
+                <button type="button" class="ghost-btn" onclick="clearCart()"><i class="fas fa-trash"></i> Clear Cart</button>
+            </div>
+        </div>
+    </div>
+
+    <form th:action="@{/bill}" method="post" onsubmit="return validateCheckout();">
+        <input type="hidden" name="itemsSummary" id="itemsSummary">
+        <input type="hidden" name="itemCount" id="itemCount">
+        <input type="hidden" name="totalAmount" id="finalTotalAmount">
+        <button type="submit" class="bill-btn"><i class="fas fa-receipt"></i> Checkout and Generate Bill</button>
+    </form>
+
+    <div class="notice" id="orderNotice">Tip: add multiple items, then checkout once to save one complete order.</div>
+</div>
+
+<script>
+    const menu = {
+        veg: [
+            { name: "🥞 Dosa", price: 30 },
+            { name: "🍚 Idly", price: 25 },
+            { name: "🍛 Meals", price: 80 },
+            { name: "🥣 Rasam", price: 35 }
+        ],
+        nonveg: [
+            { name: "🍗 Chicken Biryani", price: 150 },
+            { name: "🥩 Mutton Biryani", price: 220 },
+            { name: "🥚 Egg Parotta", price: 90 }
+        ],
+        juice: [
+            { name: "🍊 Orange Juice", price: 50 },
+            { name: "🍋 Lemon Juice", price: 40 },
+            { name: "🍍 Pineapple Juice", price: 70 }
+        ]
+    };
+
+    let totalAmount = 0;
+    let totalItems = 0;
+    const orderLines = [];
+    const orderLineTotals = [];
+    const orderLineQty = [];
+    const orderLineNames = [];
+
+    function updateMenu() {
+        const category = document.getElementById("category").value;
+        const foodSelect = document.getElementById("food");
+        foodSelect.innerHTML = "";
+
+        menu[category].forEach(item => {
+            const option = document.createElement("option");
+            option.value = item.price;
+            option.textContent = `${item.name} - Rs. ${item.price}`;
+            foodSelect.appendChild(option);
+        });
+    }
+
+    function addItem() {
+        const foodSelect = document.getElementById("food");
+        const quantity = parseInt(document.getElementById("quantity").value, 10);
+
+        if (!quantity || quantity <= 0) {
+            setNotice("Enter a valid quantity greater than 0.", true);
+            return;
+        }
+
+        const unitPrice = parseInt(foodSelect.value, 10);
+        const foodName = foodSelect.options[foodSelect.selectedIndex].text.split(" - ")[0];
+        const lineTotal = unitPrice * quantity;
+
+        totalAmount += lineTotal;
+        totalItems += quantity;
+
+        orderLineNames.push(foodName);
+        orderLineTotals.push(lineTotal);
+        orderLineQty.push(quantity);
+        orderLines.push(`${foodName} x${quantity} (Rs. ${lineTotal})`);
+
+        const li = document.createElement("li");
+        li.innerHTML = `<span>${foodName}</span><span style="margin-left:auto;">x${quantity}</span><span class="status-pill">Rs. ${lineTotal}</span>`;
+        document.getElementById("orderList").appendChild(li);
+
+        syncHiddenFields();
+        document.getElementById("quantity").value = 1;
+        setNotice("Item added to cart.", false);
+    }
+
+    function removeLastItem() {
+        if (orderLines.length === 0) {
+            setNotice("Cart is already empty.", true);
+            return;
+        }
+
+        const lastTotal = orderLineTotals.pop();
+        const lastQty = orderLineQty.pop();
+        orderLineNames.pop();
+        orderLines.pop();
+
+        totalAmount -= lastTotal;
+        totalItems -= lastQty;
+
+        const list = document.getElementById("orderList");
+        list.removeChild(list.lastElementChild);
+        syncHiddenFields();
+        setNotice("Last item removed.", false);
+    }
+
+    function clearCart() {
+        totalAmount = 0;
+        totalItems = 0;
+        orderLines.length = 0;
+        orderLineTotals.length = 0;
+        orderLineQty.length = 0;
+        orderLineNames.length = 0;
+        document.getElementById("orderList").innerHTML = "";
+        syncHiddenFields();
+        setNotice("Cart cleared.", false);
+    }
+
+    function syncHiddenFields() {
+        document.getElementById("totalAmount").innerText = totalAmount;
+        document.getElementById("itemsSummary").value = orderLines.join(", ");
+        document.getElementById("itemCount").value = totalItems;
+        document.getElementById("finalTotalAmount").value = totalAmount;
+    }
+
+    function validateCheckout() {
+        if (totalAmount <= 0) {
+            setNotice("Add at least one item before checkout.", true);
+            return false;
+        }
+        return true;
+    }
+
+    function setNotice(message, isError) {
+        const notice = document.getElementById("orderNotice");
+        notice.textContent = message;
+        notice.style.background = isError ? "#fee2e2" : "#ecfdf5";
+        notice.style.borderColor = isError ? "#fca5a5" : "#a7f3d0";
+        notice.style.color = isError ? "#991b1b" : "#065f46";
+    }
+
+    updateMenu();
+</script>
+
+</body>
+</html>

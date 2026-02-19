@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Past Orders</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<header>
+    <a th:href="@{/}"><i class="fas fa-home"></i> Home</a>
+    <a th:href="@{/order}"><i class="fas fa-utensils"></i> Order</a>
+    <a class="active" th:href="@{/orders}"><i class="fas fa-clock-rotate-left"></i> Past Orders</a>
+    <a th:href="@{/contact}"><i class="fas fa-phone-alt"></i> Contact</a>
+</header>
+
+<div class="orders-container">
+    <h2><i class="fas fa-box-archive"></i> Past Orders</h2>
+
+    <div class="no-orders" th:if="${#lists.isEmpty(orders)}">
+        No past orders found. Place your first order to build history and invoice records.
+    </div>
+
+    <div class="table-wrap" th:if="${!#lists.isEmpty(orders)}">
+        <table class="orders-table">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Status</th>
+                <th>Ordered At</th>
+                <th>Items</th>
+                <th>Count</th>
+                <th>Total (Rs.)</th>
+                <th>Invoice</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="order : ${orders}">
+                <td th:text="${order.id}"></td>
+                <td><span class="status-pill">Confirmed</span></td>
+                <td th:text="${#temporals.format(order.orderedAt, 'dd MMM yyyy, hh:mm a')}"></td>
+                <td th:text="${order.itemsSummary}"></td>
+                <td th:text="${order.itemCount}"></td>
+                <td th:text="${order.totalAmount}"></td>
+                <td>
+                    <a class="invoice-btn" th:href="@{/orders/{id}/invoice.pdf(id=${order.id})}">
+                        <i class="fas fa-file-pdf"></i> PDF
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

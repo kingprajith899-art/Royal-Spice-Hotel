@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Bill</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<header>
+    <a th:href="@{/}"><i class="fas fa-home"></i> Home</a>
+    <a th:href="@{/order}"><i class="fas fa-utensils"></i> Order</a>
+    <a class="active" th:href="@{/orders}"><i class="fas fa-clock-rotate-left"></i> Past Orders</a>
+    <a th:href="@{/contact}"><i class="fas fa-phone-alt"></i> Contact</a>
+</header>
+
+<div class="container narrow">
+    <h2><i class="fas fa-file-invoice-dollar"></i> Bill Summary</h2>
+
+    <div class="bill-card">
+        <div class="bill-row">
+            <span>Order ID</span>
+            <span th:text="${orderId}"></span>
+        </div>
+        <div class="bill-row">
+            <span>Items</span>
+            <span th:text="${itemsSummary}"></span>
+        </div>
+        <div class="bill-row">
+            <span>Total Item Count</span>
+            <span th:text="${itemCount}"></span>
+        </div>
+        <div class="bill-row">
+            <span>Ordered At</span>
+            <span th:text="${#temporals.format(orderedAt, 'dd MMM yyyy, hh:mm a')}"></span>
+        </div>
+
+        <div class="bill-total">
+            <span>Total Amount</span>
+            <span>Rs. <span th:text="${totalAmount}"></span></span>
+        </div>
+    </div>
+
+    <div class="bill-buttons">
+        <a th:href="@{/orders/{id}/invoice.pdf(id=${orderId})}" class="invoice-btn">
+            <i class="fas fa-download"></i> Download Invoice PDF
+        </a>
+        <a th:href="@{/order}" class="btn"><i class="fas fa-cart-plus"></i> Place Another Order</a>
+        <a th:href="@{/orders}" class="btn secondary-btn"><i class="fas fa-list"></i> View Past Orders</a>
+    </div>
+
+    <div class="notice">Invoice PDF includes a professional header, footer, and print-ready order details.</div>
+</div>
+
+</body>
+</html>

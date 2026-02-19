@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foodie Home</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<header>
+    <a class="active" th:href="@{/}"><i class="fas fa-home"></i> Home</a>
+    <a th:href="@{/order}"><i class="fas fa-utensils"></i> Order</a>
+    <a th:href="@{/orders}"><i class="fas fa-clock-rotate-left"></i> Past Orders</a>
+    <a th:href="@{/contact}"><i class="fas fa-phone-alt"></i> Contact</a>
+</header>
+
+<div class="container narrow">
+    <h1><i class="fas fa-hotel"></i> Royal Spice Hotel</h1>
+    <p class="tagline">Order from our kitchen, confirm in seconds, and enjoy restaurant-quality meals at your doorstep.</p>
+
+    <div class="hero-grid">
+        <div class="hero-card">
+            <p class="value">Step 1</p>
+            <p>Choose your favorite dishes from veg, non-veg, and fresh drinks.</p>
+        </div>
+        <div class="hero-card">
+            <p class="value">Step 2</p>
+            <p>Review your cart and place a confirmed order with one checkout.</p>
+        </div>
+        <div class="hero-card">
+            <p class="value">Step 3</p>
+            <p>Download your invoice and track previous orders anytime.</p>
+        </div>
+    </div>
+
+    <div class="home-buttons">
+        <a th:href="@{/order}" class="btn"><i class="fas fa-bell-concierge"></i> Start Order</a>
+        <a th:href="@{/orders}" class="btn secondary-btn"><i class="fas fa-receipt"></i> Order History</a>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2026 Royal Spice Hotel</p>
+</footer>
+
+</body>
+</html>

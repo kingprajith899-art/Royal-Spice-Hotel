@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+<header>
+    <a th:href="@{/}"><i class="fas fa-home"></i> Home</a>
+    <a th:href="@{/order}"><i class="fas fa-utensils"></i> Order</a>
+    <a th:href="@{/orders}"><i class="fas fa-clock-rotate-left"></i> Past Orders</a>
+    <a class="active" th:href="@{/contact}"><i class="fas fa-phone-alt"></i> Contact</a>
+</header>
+
+<div class="container narrow">
+    <h2><i class="fas fa-headset"></i> Contact Us</h2>
+
+    <div class="contact-card">
+        <p><strong>Address:</strong> 123 Food Street, Chennai</p>
+        <p><strong>Email:</strong> foodorder@gmail.com</p>
+        <p><strong>Phone:</strong> +91 98765 43210</p>
+        <p><strong>Hours:</strong> 9:00 AM - 10:00 PM</p>
+
+        <hr>
+
+        <h3><i class="fas fa-paper-plane"></i> Send Message</h3>
+        <form method="post" th:action="@{/contact}" class="contact-form">
+            <div class="input-group">
+                <label for="name">Your Name</label>
+                <input id="name" type="text" name="name" required>
+            </div>
+
+            <div class="input-group">
+                <label for="email">Your Email</label>
+                <input id="email" type="email" name="email" required>
+            </div>
+
+            <div class="input-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" rows="4" required></textarea>
+            </div>
+
+            <button type="submit" class="btn"><i class="fas fa-paper-plane"></i> Send Message</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
