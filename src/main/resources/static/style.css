@@ -261,6 +261,41 @@ p {
     margin-bottom: 1rem;
 }
 
+.food-preview {
+    margin-bottom: 1rem;
+    border: 1px solid #f8dbc9;
+    border-radius: 16px;
+    padding: 0.75rem;
+    background: #fffaf7;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.food-preview-image {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid #f8ceb3;
+    flex-shrink: 0;
+}
+
+.food-preview-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.food-preview-text strong {
+    color: #7f1d1d;
+}
+
+.food-preview-text span {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
 label {
     display: block;
     margin-bottom: 0.4rem;
@@ -322,6 +357,15 @@ textarea:focus {
 #orderList li:hover {
     transform: translateX(4px);
     box-shadow: 0 10px 18px -16px rgba(0, 0, 0, 0.7);
+}
+
+.order-food-image {
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #f8ceb3;
+    flex-shrink: 0;
 }
 
 .order-actions {

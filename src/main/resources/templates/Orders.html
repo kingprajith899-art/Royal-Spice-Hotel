@@ -34,7 +34,7 @@
                 <th>Items</th>
                 <th>Count</th>
                 <th>Total (Rs.)</th>
-                <th>Invoice</th>
+                <th class="admin-only" style="display:none;">Invoice</th>
             </tr>
             </thead>
             <tbody>
@@ -45,7 +45,7 @@
                 <td th:text="${order.itemsSummary}"></td>
                 <td th:text="${order.itemCount}"></td>
                 <td th:text="${order.totalAmount}"></td>
-                <td>
+                <td class="admin-only" style="display:none;">
                     <a class="invoice-btn" th:href="@{/orders/{id}/invoice.pdf(id=${order.id})}">
                         <i class="fas fa-file-pdf"></i> PDF
                     </a>
@@ -55,6 +55,28 @@
         </table>
     </div>
 </div>
+
+<script>
+    async function toggleAdminInvoiceVisibility() {
+        const token = localStorage.getItem("adminToken");
+        if (!token) return;
+
+        try {
+            const response = await fetch("/api/admin/me", {
+                headers: { "X-Admin-Token": token }
+            });
+            if (!response.ok) return;
+
+            document.querySelectorAll(".admin-only").forEach(element => {
+                element.style.display = "";
+            });
+        } catch (e) {
+            // Keep invoice hidden for non-admin/invalid session.
+        }
+    }
+
+    toggleAdminInvoiceVisibility();
+</script>
 
 </body>
 </html>

@@ -137,8 +137,16 @@ public class InvoicePdfService {
         content.setFont(font, fontSize);
         content.setNonStrokingColor(color);
         content.newLineAtOffset(x, y);
-        content.showText(text);
+        content.showText(sanitizePdfText(text));
         content.endText();
+    }
+
+    private String sanitizePdfText(String input) {
+        if (input == null || input.isEmpty()) {
+            return "";
+        }
+        // Standard 14 fonts do not support emoji/extended unicode. Keep printable Latin range.
+        return input.replaceAll("[^\\x20-\\x7E]", "");
     }
 
     private List<String> splitOrderLines(String itemsSummary) {

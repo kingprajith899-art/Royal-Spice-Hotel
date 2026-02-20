@@ -7,4 +7,5 @@ import java.util.List;
 public interface DishRepository extends JpaRepository<Dish, Long> {
     List<Dish> findAllByActiveTrueOrderByCategoryAscNameAsc();
     List<Dish> findAllByOrderByCategoryAscNameAsc();
+    boolean existsByCategoryAndName(String category, String name);
 }

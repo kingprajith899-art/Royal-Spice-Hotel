@@ -29,7 +29,15 @@
 
             <div class="input-group">
                 <label for="food">Food Item</label>
-                <select id="food"></select>
+                <select id="food" onchange="updateFoodPreview()"></select>
+            </div>
+
+            <div class="food-preview" id="foodPreview">
+                <img id="foodPreviewImage" class="food-preview-image" alt="Selected dish image" loading="lazy">
+                <div class="food-preview-text">
+                    <strong id="foodPreviewName">Select a dish</strong>
+                    <span id="foodPreviewPrice">Price will appear here</span>
+                </div>
             </div>
 
             <div class="input-group">
@@ -66,11 +74,62 @@
 
 <script>
     const menu = {};
+    const foodImages = {
+        dosa: "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?auto=format&fit=crop&w=320&q=80",
+        meals: "https://cdn.dotpe.in/longtail/store-items/8401991/knzYqy3m.jpeg",
+        idly: "https://jbsite-11e9c.kxcdn.com/Ayurveda/images/content/778-Idly.jpg",
+         
+        rasam: "https://www.ice.edu/sites/default/files/inline-images/rasam%20web.jpg",
+        "chicken biryani": "https://vismaifood.com/storage/app/uploads/public/e12/7b7/127/thumb__1200_0_0_0_auto.jpg",
+        "mutton biryani": "https://www.cubesnjuliennes.com/wp-content/uploads/2021/03/Best-Mutton-Biryani-Recipe.jpg",
+        "egg parotta": "https://i.ytimg.com/vi/Xz31ahbF9FA/maxresdefault.jpg",
+        "fish gravy": "https://i.ytimg.com/vi/_-jMA-rD16k/maxresdefault.jpg",
+        "fish fry": "https://butteroverbae.com/wp-content/uploads/2018/11/spicy-fish-fry-served.jpg",
+        "orange juice": "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&w=320&q=80",
+        "lemon juice": "https://images.unsplash.com/photo-1621263764928-df1444c5e859?auto=format&fit=crop&w=320&q=80",
+        "pineapple juice": "https://pallibangla.com/wp-content/uploads/2024/06/pineapple-juice-1-600x450.jpg"
+        
+    };
+    const fallbackFoodImage = "https://i.ytimg.com/vi/_-jMA-rD16k/maxresdefault.jpg";
+    
     let totalAmount = 0;
     let totalItems = 0;
     const orderLines = [];
     const orderLineTotals = [];
     const orderLineQty = [];
+
+    function normalizeFoodKey(name) {
+        return name
+            .replace(/^[^a-zA-Z0-9]+/, "")
+            .trim()
+            .toLowerCase();
+    }
+
+    function getFoodImage(name) {
+        return foodImages[normalizeFoodKey(name)] || fallbackFoodImage;
+    }
+
+    function updateFoodPreview() {
+        const foodSelect = document.getElementById("food");
+        const previewImage = document.getElementById("foodPreviewImage");
+        const previewName = document.getElementById("foodPreviewName");
+        const previewPrice = document.getElementById("foodPreviewPrice");
+
+        if (!foodSelect.options.length) {
+            previewImage.src = fallbackFoodImage;
+            previewName.textContent = "No dish available";
+            previewPrice.textContent = "";
+            return;
+        }
+
+        const selectedText = foodSelect.options[foodSelect.selectedIndex].text;
+        const foodName = selectedText.split(" - ")[0];
+        const unitPrice = parseInt(foodSelect.value, 10);
+
+        previewImage.src = getFoodImage(foodName);
+        previewName.textContent = foodName;
+        previewPrice.textContent = `Rs. ${unitPrice}`;
+    }
 
     function updateMenu() {
         const category = document.getElementById("category").value;
@@ -83,6 +142,7 @@
             option.textContent = `${item.name} - Rs. ${item.price}`;
             foodSelect.appendChild(option);
         });
+        updateFoodPreview();
     }
 
     async function loadMenu() {
@@ -133,7 +193,8 @@
         orderLines.push(`${foodName} x${quantity} (Rs. ${lineTotal})`);
 
         const li = document.createElement("li");
-        li.innerHTML = `<span>${foodName}</span><span style="margin-left:auto;">x${quantity}</span><span class="status-pill">Rs. ${lineTotal}</span>`;
+        const imageSrc = getFoodImage(foodName);
+        li.innerHTML = `<img class="order-food-image" src="${imageSrc}" alt="${foodName}" loading="lazy"><span>${foodName}</span><span style="margin-left:auto;">x${quantity}</span><span class="status-pill">Rs. ${lineTotal}</span>`;
         document.getElementById("orderList").appendChild(li);
 
         syncHiddenFields();
